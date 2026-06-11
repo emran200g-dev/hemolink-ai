@@ -1,0 +1,136 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    /* HemoLink AI - Blood red theme */
+    --background: 30 23% 96%;       /* #f7f4f2 warm off-white */
+    --foreground: 345 14% 6%;       /* #0d0a0b near-black */
+    --card: 0 0% 100%;
+    --card-foreground: 345 14% 6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 345 14% 6%;
+    --primary: 350 79% 42%;         /* #c0152a blood red */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 351 93% 95%;       /* #fde8eb light red */
+    --secondary-foreground: 351 79% 26%; /* #7a0a17 */
+    --muted: 24 16% 91%;            /* #ede9e7 */
+    --muted-foreground: 344 6% 46%; /* #7a6f72 */
+    --accent: 2 100% 59%;           /* #ff3b30 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 350 79% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 345 14% 6% / 0.1;
+    --input: 24 16% 91%;
+    --ring: 350 79% 42%;
+    --chart-1: 350 79% 42%;  /* blood red */
+    --chart-2: 350 72% 63%;  /* #e85d75 */
+    --chart-3: 207 51% 37%;  /* #2d6a8f */
+    --chart-4: 27 87% 67%;   /* #f4a261 */
+    --chart-5: 174 57% 39%;  /* #2a9d8f */
+    --sidebar-background: 30 23% 96%;
+    --sidebar-foreground: 345 14% 6%;
+    --sidebar-primary: 350 79% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 351 93% 95%;
+    --sidebar-accent-foreground: 351 79% 26%;
+    --sidebar-border: 24 16% 91%;
+    --sidebar-ring: 350 79% 42%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 345 14% 6%;
+    --foreground: 30 23% 96%;
+    --card: 345 12% 9%;
+    --card-foreground: 30 23% 96%;
+    --popover: 345 12% 9%;
+    --popover-foreground: 30 23% 96%;
+    --primary: 350 79% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 345 12% 15%;
+    --secondary-foreground: 30 23% 96%;
+    --muted: 345 12% 15%;
+    --muted-foreground: 344 6% 60%;
+    --accent: 2 100% 59%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 350 79% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 345 12% 18%;
+    --input: 345 12% 18%;
+    --ring: 350 79% 42%;
+    --chart-1: 350 79% 42%;
+    --chart-2: 350 72% 63%;
+    --chart-3: 207 51% 37%;
+    --chart-4: 27 87% 67%;
+    --chart-5: 174 57% 39%;
+    --sidebar-background: 345 12% 9%;
+    --sidebar-foreground: 30 23% 96%;
+    --sidebar-primary: 350 79% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 345 12% 15%;
+    --sidebar-accent-foreground: 30 23% 96%;
+    --sidebar-border: 345 12% 18%;
+    --sidebar-ring: 350 79% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar { width: 6px; background: transparent; }
+  *::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 3px; }
+}
+
+/* HemoLink brand utilities */
+.font-barlow { font-family: 'Barlow Condensed', sans-serif; }
+.font-mono-dm { font-family: 'DM Mono', monospace; }
+
+/* Pulsing donor dot on map */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* AI typing cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+/* Urgency badge colors */
+.urgency-critical { background: hsl(350 79% 42%); color: white; }
+.urgency-high { background: hsl(27 87% 52%); color: white; }
+.urgency-moderate { background: hsl(207 51% 37%); color: white; }
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #c0152a, #ff3b30);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
