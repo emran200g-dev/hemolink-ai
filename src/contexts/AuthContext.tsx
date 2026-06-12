@@ -54,7 +54,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data: { session } }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          getProfile(session.user.id).then(setProfile);
+          getProfile(session.user.id).then((profileData) => {
+            setProfile(profileData);
+            if (profileData) {
+              pendo.identify({
+                visitor: {
+                  id: session.user.id,
+                  full_name: profileData.name,
+                  age: profileData.age,
+                  weight: profileData.weight,
+                  blood_group: profileData.blood_group,
+                  country: profileData.country,
+                  city: profileData.city,
+                  available: profileData.available,
+                  last_donated: profileData.last_donated,
+                  donations_count: profileData.donations_count,
+                  created_at: profileData.created_at,
+                }
+              });
+            }
+          });
         }
       })
       // @ts-ignore
@@ -70,7 +89,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        getProfile(session.user.id).then(setProfile);
+        getProfile(session.user.id).then((profileData) => {
+          setProfile(profileData);
+          if (profileData) {
+            pendo.identify({
+              visitor: {
+                id: session.user.id,
+                full_name: profileData.name,
+                age: profileData.age,
+                weight: profileData.weight,
+                blood_group: profileData.blood_group,
+                country: profileData.country,
+                city: profileData.city,
+                available: profileData.available,
+                last_donated: profileData.last_donated,
+                donations_count: profileData.donations_count,
+                created_at: profileData.created_at,
+              }
+            });
+          }
+        });
       } else {
         setProfile(null);
       }
@@ -110,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    pendo.clearSession();
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
