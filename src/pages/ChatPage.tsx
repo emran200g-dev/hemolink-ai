@@ -237,6 +237,13 @@ const SCRIPTED_STEPS: ScriptedStep[] = [
   },
 ];
 
+/* ─── Pendo Agent IDs ─── */
+const AGENT_IDS: Record<Thread['type'], string> = {
+  ai: 'rKn5nz0VknLMUHOu-t8ubaDktUg',
+  donor: 'MxWuP5MnBKIpy9V3yO763NyTfTc',
+  hospital: 'wIEpHpV7jxoGF3SFKW3sX1Axhss',
+};
+
 /* ─── Main ChatPage ─── */
 export default function ChatPage() {
   const location = useLocation();
@@ -261,6 +268,14 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scriptedRan = useRef(false);
+  const conversationIds = useRef(new Map<number, string>());
+  const getConversationId = (threadId: number) => {
+    if (!conversationIds.current.has(threadId)) {
+      conversationIds.current.set(threadId, crypto.randomUUID());
+    }
+    return conversationIds.current.get(threadId)!;
+  };
+  const isSuggestedPrompt = useRef(false);
 
   const activeThread = threads.find(t => t.id === activeId)!;
 
@@ -345,6 +360,15 @@ export default function ChatPage() {
         : t
     ));
 
+    pendo.trackAgent("prompt", {
+      agentId: AGENT_IDS[activeThread.type],
+      conversationId: getConversationId(activeId),
+      messageId: crypto.randomUUID(),
+      content: text,
+      suggestedPrompt: isSuggestedPrompt.current,
+    });
+    isSuggestedPrompt.current = false;
+
     // Stream AI reply only in the AI thread
     if (activeThread.type === 'ai') {
       setAiTyping(true);
@@ -418,6 +442,16 @@ export default function ChatPage() {
             } catch { /* incomplete frame */ }
           }
         }
+
+        if (aiText) {
+          pendo.trackAgent("agent_response", {
+            agentId: AGENT_IDS.ai,
+            conversationId: getConversationId(activeId),
+            messageId: crypto.randomUUID(),
+            content: aiText,
+            modelUsed: "gemini-2.5-flash",
+          });
+        }
       } catch {
         const fallback = "Connection issue — I'm still monitoring all active blood requests in your region. Please retry.";
         setThreads(prev => prev.map(th =>
@@ -442,6 +476,12 @@ export default function ChatPage() {
         setThreads(prev => prev.map(t =>
           t.id === activeId ? { ...t, messages: [...t.messages, autoReply] } : t
         ));
+        pendo.trackAgent("agent_response", {
+          agentId: AGENT_IDS[activeThread.type],
+          conversationId: getConversationId(activeId),
+          messageId: crypto.randomUUID(),
+          content: autoReply.content,
+        });
       }, 1200);
     }
   };
@@ -577,7 +617,7 @@ export default function ChatPage() {
             {['Find O+ donors near me', 'Check B- availability in Cairo', 'Post urgent blood request', 'What donors are online?'].map(s => (
               <button
                 key={s}
-                onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                onClick={() => { setInput(s); isSuggestedPrompt.current = true; inputRef.current?.focus(); }}
                 className="text-xs px-2.5 py-1 rounded-full border transition-all hover:border-primary/40 hover:text-primary"
                 style={{ borderColor: 'hsl(var(--border))' }}
               >
@@ -594,7 +634,7 @@ export default function ChatPage() {
             <input
               ref={inputRef}
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => { setInput(e.target.value); isSuggestedPrompt.current = false; }}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
               placeholder={activeThread.type === 'ai' ? 'Ask HemoLink AI... (e.g. Find O+ donors in Cairo)' : `Message ${activeThread.name}...`}
               className="flex-1 bg-transparent text-sm outline-none"
