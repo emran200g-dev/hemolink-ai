@@ -141,8 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) throw error;
+
+      pendo.track("user_signed_up", {
+        success: true,
+      });
+
       return { error: null };
     } catch (error) {
+      pendo.track("user_signed_up", {
+        success: false,
+        error_message: ((error as Error).message || "").substring(0, 100),
+      });
       return { error: error as Error };
     }
   };

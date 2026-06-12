@@ -101,12 +101,22 @@ function DonorRegistrationForm() {
     });
     setCheckingEligibility(false);
     if (error || !data) { toast.error('AI check failed'); return; }
+    let eligResult;
     try {
-      const result = JSON.parse(data.result);
-      setEligibilityResult(result);
+      eligResult = JSON.parse(data.result);
     } catch {
-      setEligibilityResult({ eligible: true, reason: 'AI analysis complete', recommendation: data.result || 'You appear eligible.' });
+      eligResult = { eligible: true, reason: 'AI analysis complete', recommendation: data.result || 'You appear eligible.' };
     }
+    setEligibilityResult(eligResult);
+
+    pendo.track("ai_eligibility_check_completed", {
+      blood_group: form.bloodGroup,
+      age: parseInt(form.age),
+      weight: parseInt(form.weight),
+      has_last_donated: !!form.lastDonated,
+      eligible: eligResult.eligible,
+      reason: (eligResult.reason || "").substring(0, 100),
+    });
   };
 
   const handleSubmit = async () => {
@@ -123,6 +133,19 @@ function DonorRegistrationForm() {
     });
     setRegistering(false);
     if (error) { toast.error('Registration failed: ' + error.message); return; }
+
+    pendo.track("donor_registration_submitted", {
+      blood_group: form.bloodGroup,
+      country: form.country,
+      city: form.city,
+      age: parseInt(form.age),
+      weight: parseInt(form.weight),
+      available: form.available,
+      has_whatsapp: !!form.whatsapp,
+      has_last_donated: !!form.lastDonated,
+      eligibility_checked: !!eligibilityResult,
+    });
+
     toast.success('🎉 Registered as HemoLink donor! AI has activated your profile.');
     navigate('/profile');
   };
@@ -294,6 +317,18 @@ function DoneeRegistrationForm() {
     });
     setSubmitting(false);
     if (error) { toast.error('Submission failed: ' + error.message); return; }
+
+    pendo.track("blood_request_submitted", {
+      blood_group: form.bloodGroup,
+      hospital: form.hospital,
+      city: form.city,
+      country: form.country,
+      urgency: form.urgency,
+      has_surgery_date: !!form.surgeryDate,
+      has_medical_notes: !!form.medicalNotes,
+      has_whatsapp: !!form.whatsapp,
+    });
+
     toast.success('🩸 Blood request submitted! AI is matching donors now.');
     navigate('/profile');
   };
