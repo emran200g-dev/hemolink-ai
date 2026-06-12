@@ -361,6 +361,14 @@ export default function MapPage() {
 
     setSearching(false);
     setIsAnimating(false);
+    (window as any).pendo?.track('map_donor_search_executed', {
+      blood_group: selectedBlood,
+      country: selectedCountry,
+      city: selectedCity,
+      results_count: mapped.length,
+      available_count: mapped.filter(d => d.available).length,
+      map_style: mapStyle,
+    });
   };
 
   const delay = (ms: number) => new Promise(res => setTimeout(res, ms));

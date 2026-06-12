@@ -345,6 +345,13 @@ export default function ChatPage() {
         : t
     ));
 
+    (window as any).pendo?.track('chat_message_sent', {
+      thread_type: activeThread.type,
+      thread_name: activeThread.name,
+      message_length: text.length,
+      is_ai_thread: activeThread.type === 'ai',
+    });
+
     // Stream AI reply only in the AI thread
     if (activeThread.type === 'ai') {
       setAiTyping(true);
@@ -357,6 +364,7 @@ export default function ChatPage() {
       history.push({ role: 'user', parts: [{ text: text }] });
 
       let aiText = '';
+      let aiResponseSuccess = true;
       const aiMsgId = Date.now() + 1;
 
       // Insert placeholder
@@ -419,6 +427,7 @@ export default function ChatPage() {
           }
         }
       } catch {
+        aiResponseSuccess = false;
         const fallback = "Connection issue — I'm still monitoring all active blood requests in your region. Please retry.";
         setThreads(prev => prev.map(th =>
           th.id === activeId
@@ -427,6 +436,11 @@ export default function ChatPage() {
         ));
       } finally {
         setAiTyping(false);
+        (window as any).pendo?.track('ai_chat_response_completed', {
+          response_length: aiText.length,
+          success: aiResponseSuccess,
+          thread_type: activeThread.type,
+        });
       }
     } else {
       // For non-AI threads, show quick AI auto-response after delay
