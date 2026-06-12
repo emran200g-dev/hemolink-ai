@@ -334,11 +334,23 @@ function DonorCard({ donor, onAIContact }: DonorCardProps) {
     navigator.clipboard.writeText(donor.phone).then(() => {
       setCopied(true);
       toast.success(`Copied: ${donor.phone}`);
+      (window as any).pendo?.track('donor_phone_copied', {
+        donor_blood_group: donor.blood_group,
+        donor_available: donor.available,
+        donor_match_score: donor.matchScore,
+        donor_city: donor.city,
+      });
       setTimeout(() => setCopied(false), 2000);
     });
   };
 
   const openWhatsApp = () => {
+    (window as any).pendo?.track('donor_whatsapp_contacted', {
+      donor_blood_group: donor.blood_group,
+      donor_available: donor.available,
+      donor_match_score: donor.matchScore,
+      donor_city: donor.city,
+    });
     window.open(`https://wa.me/${donor.phone.replace(/\D/g, '')}`, '_blank');
   };
 
@@ -523,6 +535,11 @@ export default function DonorPage() {
       });
       setCountry(nearest.country);
       setCity(nearest.city);
+      (window as any).pendo?.track('gps_location_detected', {
+        detected_country: nearest.country,
+        detected_city: nearest.city,
+        nearest_hospital: nearest.name,
+      });
       toast.success(`Location: ${nearest.city}, ${nearest.country}`);
     });
   };
@@ -556,6 +573,16 @@ export default function DonorPage() {
     // Wait for terminal animation to finish before showing cards
     await new Promise(r => setTimeout(r, 3000));
     setDonors(results);
+    (window as any).pendo?.track('donor_search_executed', {
+      blood_group: bloodGroup,
+      urgency,
+      country,
+      city,
+      results_count: results.length,
+      available_count: results.filter(d => d.available).length,
+      has_surgery_date: !!surgeryDate,
+      data_source: data && data.length > 0 ? 'database' : 'mock',
+    });
     setSearching(false);
   };
 
@@ -572,6 +599,16 @@ export default function DonorPage() {
   };
 
   const handleContactOverlayDone = () => {
+    (window as any).pendo?.track('ai_contact_donor_initiated', {
+      donor_name: contactDonor?.name,
+      donor_blood_group: contactDonor?.blood_group,
+      donor_match_score: contactDonor?.matchScore,
+      donor_distance: contactDonor?.distance,
+      donor_city: contactDonor?.city,
+      donor_country: contactDonor?.country,
+      search_city: city,
+      search_country: country,
+    });
     setContactDonor(null);
     // Navigate to chat with scripted flow state
     navigate('/chat', {

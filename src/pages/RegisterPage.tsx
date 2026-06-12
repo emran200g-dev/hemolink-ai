@@ -104,8 +104,24 @@ function DonorRegistrationForm() {
     try {
       const result = JSON.parse(data.result);
       setEligibilityResult(result);
+      (window as any).pendo?.track('ai_eligibility_check_completed', {
+        eligible: result.eligible,
+        blood_group: form.bloodGroup,
+        age: parseInt(form.age),
+        weight: parseInt(form.weight),
+        has_last_donated: !!form.lastDonated,
+        reason: String(result.reason || '').substring(0, 100),
+      });
     } catch {
       setEligibilityResult({ eligible: true, reason: 'AI analysis complete', recommendation: data.result || 'You appear eligible.' });
+      (window as any).pendo?.track('ai_eligibility_check_completed', {
+        eligible: true,
+        blood_group: form.bloodGroup,
+        age: parseInt(form.age),
+        weight: parseInt(form.weight),
+        has_last_donated: !!form.lastDonated,
+        reason: 'AI analysis complete',
+      });
     }
   };
 
@@ -123,6 +139,15 @@ function DonorRegistrationForm() {
     });
     setRegistering(false);
     if (error) { toast.error('Registration failed: ' + error.message); return; }
+    (window as any).pendo?.track('donor_registration_completed', {
+      blood_group: form.bloodGroup,
+      country: form.country,
+      city: form.city,
+      available: form.available,
+      has_whatsapp: !!form.whatsapp,
+      age: parseInt(form.age),
+      weight: parseInt(form.weight),
+    });
     toast.success('🎉 Registered as HemoLink donor! AI has activated your profile.');
     navigate('/profile');
   };
@@ -294,6 +319,15 @@ function DoneeRegistrationForm() {
     });
     setSubmitting(false);
     if (error) { toast.error('Submission failed: ' + error.message); return; }
+    (window as any).pendo?.track('blood_request_submitted', {
+      blood_group: form.bloodGroup,
+      urgency: form.urgency,
+      country: form.country,
+      city: form.city,
+      hospital: form.hospital,
+      has_surgery_date: !!form.surgeryDate,
+      has_medical_notes: !!form.medicalNotes,
+    });
     toast.success('🩸 Blood request submitted! AI is matching donors now.');
     navigate('/profile');
   };
