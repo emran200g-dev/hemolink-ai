@@ -335,10 +335,24 @@ function DonorCard({ donor, onAIContact }: DonorCardProps) {
       setCopied(true);
       toast.success(`Copied: ${donor.phone}`);
       setTimeout(() => setCopied(false), 2000);
+
+      pendo.track("donor_phone_copied", {
+        donor_blood_group: donor.blood_group,
+        donor_available: donor.available,
+        donor_match_score: donor.matchScore ?? 0,
+        donor_city: donor.city,
+      });
     });
   };
 
   const openWhatsApp = () => {
+    pendo.track("whatsapp_contact_initiated", {
+      donor_blood_group: donor.blood_group,
+      donor_available: donor.available,
+      donor_match_score: donor.matchScore ?? 0,
+      donor_city: donor.city,
+      donor_name: donor.name,
+    });
     window.open(`https://wa.me/${donor.phone.replace(/\D/g, '')}`, '_blank');
   };
 
@@ -524,6 +538,12 @@ export default function DonorPage() {
       setCountry(nearest.country);
       setCity(nearest.city);
       toast.success(`Location: ${nearest.city}, ${nearest.country}`);
+
+      pendo.track("gps_location_detected", {
+        detected_country: nearest.country,
+        detected_city: nearest.city,
+        nearest_hospital: nearest.name,
+      });
     });
   };
 
@@ -557,6 +577,17 @@ export default function DonorPage() {
     await new Promise(r => setTimeout(r, 3000));
     setDonors(results);
     setSearching(false);
+
+    pendo.track("donor_search_executed", {
+      blood_group: bloodGroup,
+      urgency,
+      country,
+      city,
+      surgery_date: surgeryDate || "",
+      results_count: results.length,
+      available_count: results.filter(d => d.available).length,
+      used_mock_data: !(data && data.length > 0),
+    });
   };
 
   // AI Contact Donor: switch to map view → zoom → overlay → chat
@@ -572,6 +603,16 @@ export default function DonorPage() {
   };
 
   const handleContactOverlayDone = () => {
+    pendo.track("ai_contact_donor_initiated", {
+      donor_name: contactDonor?.name ?? "unknown",
+      donor_blood_group: contactDonor?.blood_group ?? "unknown",
+      donor_city: city,
+      donor_country: country,
+      donor_match_score: contactDonor?.matchScore ?? 0,
+      donor_available: contactDonor?.available ?? false,
+      donor_distance: contactDonor?.distance ?? 0,
+    });
+
     setContactDonor(null);
     // Navigate to chat with scripted flow state
     navigate('/chat', {

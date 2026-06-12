@@ -355,6 +355,16 @@ export default function MapPage() {
     setAiStatus(`Found ${mapped.length} donors — ${mapped.filter(d => d.available).length} available`);
     setAiPhase('done');
 
+    pendo.track("map_donor_search_executed", {
+      blood_group: selectedBlood,
+      country: selectedCountry,
+      city: selectedCity,
+      donors_found: mapped.length,
+      available_donors: mapped.filter(d => d.available).length,
+      used_mock_data: !(dbData && dbData.length > 0),
+      map_style: mapStyle,
+    });
+
     // Phase 3: Zoom back slightly for overview
     await delay(600);
     map.flyTo({ center: [lng, lat], zoom: 12.5, pitch: 45, bearing: 0, duration: 1200 });
