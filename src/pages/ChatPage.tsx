@@ -261,6 +261,8 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scriptedRan = useRef(false);
+  const conversationId = useRef(crypto.randomUUID());
+  const suggestedRef = useRef(false);
 
   const activeThread = threads.find(t => t.id === activeId)!;
 
@@ -347,6 +349,15 @@ export default function ChatPage() {
 
     // Stream AI reply only in the AI thread
     if (activeThread.type === 'ai') {
+      window.pendo?.trackAgent("prompt", {
+        agentId: "k9lPQ-djJfTgOkgKgMtulKzvGaY",
+        conversationId: conversationId.current,
+        messageId: crypto.randomUUID(),
+        content: text,
+        suggestedPrompt: suggestedRef.current,
+      });
+      suggestedRef.current = false;
+
       setAiTyping(true);
 
       const history = activeThread.messages
@@ -357,6 +368,7 @@ export default function ChatPage() {
       history.push({ role: 'user', parts: [{ text: text }] });
 
       let aiText = '';
+      let finalResponseContent = '';
       const aiMsgId = Date.now() + 1;
 
       // Insert placeholder
@@ -418,8 +430,10 @@ export default function ChatPage() {
             } catch { /* incomplete frame */ }
           }
         }
+        finalResponseContent = aiText;
       } catch {
         const fallback = "Connection issue — I'm still monitoring all active blood requests in your region. Please retry.";
+        finalResponseContent = fallback;
         setThreads(prev => prev.map(th =>
           th.id === activeId
             ? { ...th, messages: th.messages.map(m => m.id === aiMsgId ? { ...m, content: fallback } : m) }
@@ -427,6 +441,13 @@ export default function ChatPage() {
         ));
       } finally {
         setAiTyping(false);
+        window.pendo?.trackAgent("agent_response", {
+          agentId: "k9lPQ-djJfTgOkgKgMtulKzvGaY",
+          conversationId: conversationId.current,
+          messageId: crypto.randomUUID(),
+          content: finalResponseContent,
+          modelUsed: "gemini-2.5-flash",
+        });
       }
     } else {
       // For non-AI threads, show quick AI auto-response after delay
@@ -577,7 +598,7 @@ export default function ChatPage() {
             {['Find O+ donors near me', 'Check B- availability in Cairo', 'Post urgent blood request', 'What donors are online?'].map(s => (
               <button
                 key={s}
-                onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                onClick={() => { suggestedRef.current = true; setInput(s); inputRef.current?.focus(); }}
                 className="text-xs px-2.5 py-1 rounded-full border transition-all hover:border-primary/40 hover:text-primary"
                 style={{ borderColor: 'hsl(var(--border))' }}
               >
